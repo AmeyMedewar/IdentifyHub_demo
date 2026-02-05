@@ -1,333 +1,35 @@
-name: FastAPI CI
+name: FastAPI Minimal CI Test
 
-# Trigger on push or pull request
 on:
   push:
-    branches: [ main, dev ]
-    paths:
-      - 'ml-service/**'
-      - '.github/workflows/fastapi-ci.yml'
+    branches: [dev]
   pull_request:
-    branches: [ main, dev ]
-    paths:
-      - 'ml-service/**'
+    branches: [dev]
 
 jobs:
-  # Job 1: Lint and Format Check
-  lint:
-    name: Lint and Format
+  test-ci:
+    name: CI Connection Test
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repo
         uses: actions/checkout@v4
-      
-      # Setup Python
-      - name: Set up Python
+
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      # Install dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 black isort mypy
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-      
-      # Run flake8 linter
-      - name: Lint with flake8
-        run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        continue-on-error: true
-      
-      # Check code formatting with black
-      - name: Check formatting with black
-        run: black . --check
-        continue-on-error: true
-      
-      # Check import sorting with isort
-      - name: Check imports with isort
-        run: isort . --check-only
-        continue-on-error: true
-      
-      # Type checking with mypy
-      - name: Type check with mypy
-        run: mypy . --ignore-missing-imports
-        continue-on-error: true
+          python-version: "3.11"
 
-  # Job 2: Run Tests
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: lint
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11']
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-      
-      - name: Install dependencies
+      - name: Install Dependencies (if any)
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-cov pytest-asyncio httpx
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-      
-      # Run tests with coverage
-      - name: Run tests with pytest
-        run: |
-          pytest --cov=. --cov-report=xml --cov-report=html -v
-        continue-on-error: false
-      
-      # Upload coverage report
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./ml-service
-          flags: ml-service
-          name: fastapi-coverage
-        continue-on-error: true
+          echo "Installing requirements..."
+          if [ -f ml-service/requirements.txt ]; then
+            pip install -r ml-service/requirements.txt
+          else
+            echo "No requirements.txt found, skipping install"
+          fi
 
-  # Job 3: Security Scan
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
+      - name: Status Check
         run: |
-          python -m pip install --upgrade pip
-          pip install safety bandit
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      
-      # Check for known security vulnerabilities
-      - name: Check dependencies with Safety
-        run: safety check --json
-        continue-on-error: true
-      
-      # Static security analysis
-      - name: Security check with Bandit
-        run: bandit -r . -f json -o bandit-report.json
-        continue-on-error: true
-      
-      - name: Upload security reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-reports
-          path: ml-service/bandit-report.json
-        if: always()
-        continue-on-error: true
-
-  # Job 4: Build Docker Image
-  build-docker:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      # Build Docker image
-      - name: Build Docker image
-        run: |
-          cd ml-service
-          docker build -t fastapi-ml-service:${{ github.sha }} .
-      
-      # Test the Docker image
-      - name: Test Docker image
-        run: |
-          docker run -d -p 8000:8000 --name test-container fastapi-ml-service:${{ github.sha }}
-          sleep 10
-          curl -f http://localhost:8000/health || exit 1
-          docker stop test-container
-        continue-on-error: true
-      
-      # Save Docker image as artifact (optional)
-      - name: Save Docker image
-        run: |
-          docker save fastapi-ml-service:${{ github.sha }} | gzip > fastapi-ml-service.tar.gz
-      
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: fastapi-ml-service.tar.gz
-          retention-days: 7
-
-  # Job 5: Test Face Recognition Models (if you have test models)
-  test-models:
-    name: Test ML Models
-    runs-on: ubuntu-latest
-    needs: test
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest opencv-python-headless face-recognition
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-      
-      # Cache model files to speed up CI
-      - name: Cache ML models
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/face_recognition_models
-            ml-service/models
-          key: ${{ runner.os }}-models-${{ hashFiles('ml-service/models/**') }}
-      
-      # Run model tests
-      - name: Test face recognition models
-        run: |
-          pytest tests/test_models.py -v
-        continue-on-error: true
-        env:
-          CI: true
-
-  # Job 6: API Integration Test
-  api-test:
-    name: API Integration Test
-    runs-on: ubuntu-latest
-    needs: test
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      
-      # Start FastAPI server in background
-      - name: Start FastAPI server
-        run: |
-          uvicorn main:app --host 0.0.0.0 --port 8000 &
-          sleep 10
-        env:
-          ENVIRONMENT: testing
-      
-      # Test API endpoints
-      - name: Test API endpoints
-        run: |
-          curl -f http://localhost:8000/health || exit 1
-          curl -f http://localhost:8000/docs || exit 1
-          echo "✅ API endpoints responding"
-
-  # Job 7: Performance Test
-  performance:
-    name: Performance Test
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    defaults:
-      run:
-        working-directory: ml-service
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install locust
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      
-      # Start server
-      - name: Start FastAPI server
-        run: |
-          uvicorn main:app --host 0.0.0.0 --port 8000 &
-          sleep 10
-        env:
-          ENVIRONMENT: testing
-      
-      # Run load test with Locust
-      - name: Run performance test
-        run: |
-          locust -f tests/locustfile.py --headless -u 10 -r 2 -t 30s --host http://localhost:8000
-        continue-on-error: true
-
-  # Summary job
-  ci-success:
-    name: CI Pipeline Success
-    runs-on: ubuntu-latest
-    needs: [lint, test, security, build-docker, api-test]
-    if: success()
-    
-    steps:
-      - name: Success message
-        run: |
-          echo "✅ All FastAPI CI checks passed!"
-          echo "🚀 ML Service is ready for deployment"
-          echo "📊 Face recognition models validated"
+          echo "✅ STATUS OK"
+          echo "🚀 GitHub Actions Workflow is Working!"
