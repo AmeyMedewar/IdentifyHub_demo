@@ -1,0 +1,114 @@
+name: Master CI Pipeline
+
+# This workflow orchestrates all three CI pipelines
+# It runs when there's a push or PR to main/develop branches
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Detect which services changed
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+      ml-service: ${{ steps.changes.outputs.ml-service }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            ml-service:
+              - 'ml-service/**'
+
+  # Trigger React Native CI if frontend changed
+  frontend-ci:
+    name: Frontend CI
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/react-native-ci.yml
+
+  # Trigger Spring Boot CI if backend changed
+  backend-ci:
+    name: Backend CI
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    uses: ./.github/workflows/spring-boot-ci.yml
+
+  # Trigger FastAPI CI if ML service changed
+  ml-service-ci:
+    name: ML Service CI
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ml-service == 'true'
+    uses: ./.github/workflows/fastapi-ci.yml
+
+  # Final status check
+  all-ci-complete:
+    name: All CI Pipelines Complete
+    runs-on: ubuntu-latest
+    needs: [detect-changes, frontend-ci, backend-ci, ml-service-ci]
+    if: always()
+    
+    steps:
+      - name: Check CI status
+        run: |
+          echo "🔍 CI Pipeline Summary:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Frontend changed: ${{ needs.detect-changes.outputs.frontend }}"
+          echo "Backend changed: ${{ needs.detect-changes.outputs.backend }}"
+          echo "ML Service changed: ${{ needs.detect-changes.outputs.ml-service }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          if [ "${{ needs.frontend-ci.result }}" == "success" ] || [ "${{ needs.detect-changes.outputs.frontend }}" == "false" ]; then
+            echo "✅ Frontend CI: Passed"
+          else
+            echo "❌ Frontend CI: Failed"
+          fi
+          
+          if [ "${{ needs.backend-ci.result }}" == "success" ] || [ "${{ needs.detect-changes.outputs.backend }}" == "false" ]; then
+            echo "✅ Backend CI: Passed"
+          else
+            echo "❌ Backend CI: Failed"
+          fi
+          
+          if [ "${{ needs.ml-service-ci.result }}" == "success" ] || [ "${{ needs.detect-changes.outputs.ml-service }}" == "false" ]; then
+            echo "✅ ML Service CI: Passed"
+          else
+            echo "❌ ML Service CI: Failed"
+          fi
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Overall status
+        if: |
+          (needs.frontend-ci.result == 'failure') ||
+          (needs.backend-ci.result == 'failure') ||
+          (needs.ml-service-ci.result == 'failure')
+        run: |
+          echo "❌ Some CI pipelines failed!"
+          exit 1
+      
+      - name: Success
+        if: |
+          (needs.frontend-ci.result == 'success' || needs.detect-changes.outputs.frontend == 'false') &&
+          (needs.backend-ci.result == 'success' || needs.detect-changes.outputs.backend == 'false') &&
+          (needs.ml-service-ci.result == 'success' || needs.detect-changes.outputs.ml-service == 'false')
+        run: |
+          echo "✅ All CI pipelines passed successfully!"
+          echo "🚀 Ready for deployment"
