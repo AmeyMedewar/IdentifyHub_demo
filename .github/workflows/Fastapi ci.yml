@@ -3,12 +3,12 @@ name: FastAPI CI
 # Trigger on push or pull request
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
     paths:
       - 'ml-service/**'
       - '.github/workflows/fastapi-ci.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
     paths:
       - 'ml-service/**'
 
