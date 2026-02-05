@@ -1,4 +1,4 @@
-name: FastAPI Minimal CI Test
+name: FastAPI CI Step 1 (Lint + Test)
 
 on:
   push:
@@ -7,29 +7,38 @@ on:
     branches: [dev]
 
 jobs:
-  test-ci:
-    name: CI Connection Test
+  ci-check:
+    name: Lint and Test
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ml-service
+
     steps:
+      # 1. Checkout code
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      # 2. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Dependencies (if any)
+      # 3. Install dependencies
+      - name: Install Requirements
         run: |
-          echo "Installing requirements..."
-          if [ -f ml-service/requirements.txt ]; then
-            pip install -r ml-service/requirements.txt
-          else
-            echo "No requirements.txt found, skipping install"
-          fi
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
 
-      - name: Status Check
+      # 4. Run Linter
+      - name: Run flake8 Lint Check
         run: |
-          echo "✅ STATUS OK"
-          echo "🚀 GitHub Actions Workflow is Working!"
+          flake8 . --max-line-length=120
+
+      # 5. Run Tests
+      - name: Run pytest
+        run: |
+          pytest -v
