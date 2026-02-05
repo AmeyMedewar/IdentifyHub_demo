@@ -13,7 +13,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ml-service
+        working-directory: ML_Layer
 
     steps:
       # 1. Checkout code
