@@ -1,4 +1,4 @@
-name: FastAPI CI Step 1 (Lint + Test)
+name: FastAPI CI Step 4 (Integration Test)
 
 on:
   push:
@@ -8,16 +8,12 @@ on:
 
 jobs:
   ci-check:
-    name: Lint and Test
+    name: Lint + Format + Tests + Integration
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ML_Layer
-
     steps:
-      # 1. Checkout code
-      - name: Checkout Repo
+      # 1. Checkout Repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
       # 2. Setup Python
@@ -26,19 +22,42 @@ jobs:
         with:
           python-version: "3.11"
 
-      # 3. Install dependencies
-      - name: Install Requirements
+      # 3. Install Dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest flake8
 
-      # 4. Run Linter
-      - name: Run flake8 Lint Check
-        run: |
-          flake8 . --max-line-length=120 || true
+          # Project dependencies
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
 
-      # 5. Run Tests
-      - name: Run pytest
+          # CI tools
+          pip install flake8 black pytest pytest-cov httpx
+
+      # 4. Lint Check (soft)
+      - name: Run flake8
         run: |
-          pytest -v
+          flake8 . --max-line-length=120 --ignore=W291,W293,W292
+
+      # 5. Format Check
+      - name: Run Black Check
+        run: |
+          black . --check
+
+      # 6. Run Unit Tests + Coverage
+      - name: Run Tests with Coverage
+        run: |
+          pytest --cov=. --cov-report=term-missing -v
+
+      # 7. Integration Test: Start FastAPI Server
+      - name: Start FastAPI server
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+
+      # 8. Integration Test: Call Health Endpoint
+      - name: Test /health endpoint
+        run: |
+          curl -f http://127.0.0.1:8000/health
+          echo "✅ Integration Test Passed!"
