@@ -1,0 +1,63 @@
+name: Admin Frontend CI
+
+on:
+  push:
+    branches: [ dev ]
+    paths:
+      - "Admin-Frontend/**"
+      - ".github/workflows/admin-frontend-ci.yml"
+
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - "Admin-Frontend/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: Admin-Frontend/package-lock.json
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        working-directory: ./Admin-Frontend
+        run: npm ci
+
+      # 4. Build project
+      - name: Build project
+        working-directory: ./Admin-Frontend
+        run: npm run build
+
+      # 5. Verify build output
+      - name: Verify build output
+        run: |
+          if [ -d "Admin-Frontend/dist" ]; then
+            echo "✅ Build successful - dist folder created"
+            ls -la Admin-Frontend/dist/
+          else
+            echo "❌ Build failed - no dist folder"
+            exit 1
+          fi
+
+      # 6. Run tests (if available)
+      - name: Run tests (if available)
+        working-directory: ./Admin-Frontend
+        run: |
+          if grep -q '"test"' package.json; then
+            echo "Running tests..."
+            npm test -- --passWithNoTests
+          else
+            echo "⚠️ No test script found in package.json"
+          fi
+        continue-on-error: true

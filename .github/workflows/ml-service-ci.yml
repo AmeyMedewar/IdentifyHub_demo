@@ -1,10 +1,16 @@
-name: FastAPI CI Step 4 (Integration Test)
+name: Ml Service Step 4 (Integration Test)
 
 on:
   push:
     branches: [dev]
+    paths:
+      - "ML-Service/**"
+      - ".github/workflows/ml-service-ci.yml"
+
   pull_request:
     branches: [dev]
+    paths:
+      - "ML-Service/**"
 
 jobs:
   ci-check:
@@ -24,6 +30,7 @@ jobs:
 
       # 3. Install Dependencies
       - name: Install dependencies
+        working-directory: ML-Service
         run: |
           python -m pip install --upgrade pip
 
@@ -33,29 +40,35 @@ jobs:
           fi
 
           # CI tools
-          pip install flake8 black pytest pytest-cov httpx
+          pip install flake8 black pytest pytest-cov httpx uvicorn
 
-      # 4. Lint Check (soft)
+      # 4. Lint Check
       - name: Run flake8
+        working-directory: ML-Service
         run: |
           flake8 . --max-line-length=120 --ignore=W291,W293,W292
 
       # 5. Format Check
       - name: Run Black Check
+        working-directory: ML-Service
         run: |
           black . --check
 
       # 6. Run Unit Tests + Coverage
       - name: Run Tests with Coverage
+        working-directory: ML-Service
         run: |
           pytest --cov=. --cov-report=term-missing -v
-                
+
+      # 7. Start FastAPI Server
       - name: Start FastAPI server
+        working-directory: ML-Service
         run: |
           uvicorn main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
           sleep 3
           cat server.log
 
+      # 8. Integration Test
       - name: Test /health endpoint
         run: |
           for i in {1..10}; do
