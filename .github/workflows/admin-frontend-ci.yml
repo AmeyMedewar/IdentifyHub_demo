@@ -4,13 +4,13 @@ on:
   push:
     branches: [ dev ]
     paths:
-      - "Admin-Frontend/**"
+      - "Admin_Frontend/**"
       - ".github/workflows/admin-frontend-ci.yml"
 
   pull_request:
     branches: [ dev, main ]
     paths:
-      - "Admin-Frontend/**"
+      - "Admin_Frontend/**"
 
 jobs:
   build:

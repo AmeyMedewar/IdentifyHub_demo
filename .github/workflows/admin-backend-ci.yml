@@ -4,12 +4,12 @@ on:
   push:
     branches: [dev]
     paths:
-      - "Admin-Backend/**"
+      - "Admin_Backend/**"
 
   pull_request:
     branches: [dev, main]
     paths:
-      - "Admin-Backend/**"
+      - "Admin_Backend/**"
 
 jobs:
   build-admin-backend:
