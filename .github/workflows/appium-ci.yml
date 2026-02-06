@@ -21,6 +21,7 @@ jobs:
           node-version: 18
 
       - name: Install Packages
+        working-directory: Frontend/attendance-app
         run: npm install
 
       - name: Install Appium
@@ -30,4 +31,5 @@ jobs:
         run: appium -v
 
       - name: Run Test
+        working-directory: Frontend/attendance-app
         run: npm test
