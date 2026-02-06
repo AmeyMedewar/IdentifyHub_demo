@@ -26,17 +26,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
+          cache: "npm"
+          cache-dependency-path: Frontend/attendance-app/package-lock.json
 
       # 3. Install Dependencies
       - name: Install dependencies
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "📦 Installing dependencies..."
           npm install --legacy-peer-deps
 
       # 4. Run ESLint (Compulsory)
       - name: Run Lint Check
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🔍 Running ESLint..."
           if npm run | grep -q "lint"; then
@@ -47,7 +49,7 @@ jobs:
 
       # 5. Run TypeScript Type Check (if TS Project)
       - name: Run Type Check
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🧠 Running TypeScript check..."
           if [ -f "tsconfig.json" ]; then
@@ -58,7 +60,7 @@ jobs:
 
       # 6. Run Unit Tests (Jest)
       - name: Run Tests
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🧪 Running tests..."
           if npm run | grep -q "test"; then
@@ -69,7 +71,7 @@ jobs:
 
       # 7. Metro Bundle Check (Very Important for RN)
       - name: Verify Metro Bundling Works
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "📦 Testing Metro bundler build..."
           npx react-native bundle \
@@ -88,6 +90,6 @@ jobs:
         with:
           name: frontend-debug-logs
           path: |
-            Frontend/npm-debug.log
-            Frontend/yarn-error.log
+            Frontend/attendance-app/npm-debug.log
+            Frontend/attendance-app/yarn-error.log
             /tmp/index.android.bundle
