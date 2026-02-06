@@ -1,4 +1,4 @@
-name: Ml Service Step 4 (Integration Test)
+name: Ml Service CI
 
 on:
   push:
