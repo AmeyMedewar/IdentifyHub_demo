@@ -1,0 +1,33 @@
+name: Basic Appium CI
+
+on:
+  push:
+    branches: [ dev ]
+    paths:
+      - "Frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v3
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Packages
+        run: npm install
+
+      - name: Install Appium
+        run: npm install -g appium
+
+      - name: Check Appium Version
+        run: appium -v
+
+      - name: Run Test
+        run: npm test
