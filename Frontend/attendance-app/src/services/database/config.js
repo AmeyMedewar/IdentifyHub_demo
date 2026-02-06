@@ -4,7 +4,7 @@
  * console.firebase.google.com se copy karo
  */
 export const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyDuoa69Y4WoPDuXAz0jpjm4r4qkVU0BX88',
+  apiKey: '',
   authDomain: 'identifyhub.firebaseapp.com',
   projectId: 'identifyhub',
   storageBucket: 'identifyhub.appspot.com',
