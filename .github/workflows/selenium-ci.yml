@@ -1,0 +1,46 @@
+name: Basic Selenium CI With Logs
+
+on:
+  push:
+    branches: [ dev ]
+    paths:
+      - "Admin_Frontend/**"
+      - ".github/workflows/selenium-ci.yml"
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log - CI Started
+        run: echo "CI Pipeline Started"
+
+      - name: Get Code
+        uses: actions/checkout@v3
+
+      - name: Log - Code Checked Out
+        run: echo "Code checkout completed"
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Log - Node Installed
+        run: node -v
+
+      - name: Install Packages
+        run: |
+          echo "Installing npm packages..."
+          npm install
+          echo "Packages installed successfully"
+
+      - name: Run Selenium Test
+        run: |
+          echo "Starting Selenium Test..."
+          npm test
+          echo "Selenium Test Finished"
+
+      - name: Log - CI Finished
+        run: echo "CI Pipeline Completed Successfully"
