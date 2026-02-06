@@ -5,7 +5,7 @@ on:
     branches: [ dev ]
     paths:
       - "Frontend/**"
-      - ".github/workflows/frontend-ci.yml"
+      - ".github/workflows/appium-ci.yml"
 
 jobs:
   test:
