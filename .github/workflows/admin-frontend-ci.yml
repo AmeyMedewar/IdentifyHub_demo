@@ -27,24 +27,24 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
-          cache-dependency-path: Admin-Frontend/package-lock.json
+          cache-dependency-path: "Admin_Frontend/Admin Dashboard/project/package-lock.json"
 
       # 3. Install dependencies
       - name: Install dependencies
-        working-directory: ./Admin-Frontend
+        working-directory: "Admin_Frontend/Admin Dashboard/project"
         run: npm ci
 
       # 4. Build project
       - name: Build project
-        working-directory: ./Admin-Frontend
+        working-directory: "Admin_Frontend/Admin Dashboard/project"
         run: npm run build
 
       # 5. Verify build output
       - name: Verify build output
         run: |
-          if [ -d "Admin-Frontend/dist" ]; then
+          if [ -d "Admin_Frontend/Admin Dashboard/project/dist" ]; then
             echo "✅ Build successful - dist folder created"
-            ls -la Admin-Frontend/dist/
+            ls -la "Admin_Frontend/Admin Dashboard/project/dist/"
           else
             echo "❌ Build failed - no dist folder"
             exit 1
@@ -52,7 +52,7 @@ jobs:
 
       # 6. Run tests (if available)
       - name: Run tests (if available)
-        working-directory: ./Admin-Frontend
+        working-directory: "Admin_Frontend/Admin Dashboard/project"
         run: |
           if grep -q '"test"' package.json; then
             echo "Running tests..."
