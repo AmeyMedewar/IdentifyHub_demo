@@ -56,3 +56,5 @@ Thumbs.db
 
 # Model cache
 ~/.insightface/
+
+.DS_Store
