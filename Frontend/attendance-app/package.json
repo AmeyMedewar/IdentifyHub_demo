@@ -17,7 +17,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/stack": "^7.7.0",
-    "aws-sdk": "^1.18.0",
+    "aws-sdk": "^2.1693.0",
     "axios": "^1.13.4",
     "expo": "~54.0.33",
     "expo-camera": "~17.0.10",
@@ -53,6 +53,7 @@
     "@types/estree": "^1.0.8",
     "@types/istanbul-reports": "^3.0.4",
     "@types/react": "~19.1.0",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"

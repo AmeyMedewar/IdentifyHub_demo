@@ -1,4 +1,4 @@
-name: Frontend CI (React Native)
+name: Frontend CI
 
 on:
   push:
@@ -25,20 +25,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
           cache: "npm"
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: Frontend/attendance-app/package-lock.json
 
-      # 3. Install Dependencies (Clean Install)
+      # 3. Install Dependencies
       - name: Install dependencies
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "📦 Installing dependencies..."
-          npm ci
+          npm install --legacy-peer-deps
 
       # 4. Run ESLint (Compulsory)
       - name: Run Lint Check
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🔍 Running ESLint..."
           if npm run | grep -q "lint"; then
@@ -49,7 +49,7 @@ jobs:
 
       # 5. Run TypeScript Type Check (if TS Project)
       - name: Run Type Check
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🧠 Running TypeScript check..."
           if [ -f "tsconfig.json" ]; then
@@ -60,7 +60,7 @@ jobs:
 
       # 6. Run Unit Tests (Jest)
       - name: Run Tests
-        working-directory: Frontend
+        working-directory: Frontend/attendance-app
         run: |
           echo "🧪 Running tests..."
           if npm run | grep -q "test"; then
@@ -69,19 +69,16 @@ jobs:
             echo "⚠️ No test script found"
           fi
 
-      # 7. Metro Bundle Check (Very Important for RN)
-      - name: Verify Metro Bundling Works
-        working-directory: Frontend
+      # 7. Expo Export Check (Validates Metro bundling for Expo)
+      - name: Verify Expo Bundling Works
+        working-directory: Frontend/attendance-app
+        env:
+          EXPO_NO_TELEMETRY: "1"
+          CI: "1"
         run: |
-          echo "📦 Testing Metro bundler build..."
-          npx react-native bundle \
-            --entry-file index.js \
-            --platform android \
-            --dev false \
-            --bundle-output /tmp/index.android.bundle \
-            --assets-dest /tmp/assets
-
-          echo "✅ Metro bundling successful!"
+          echo "📦 Testing Expo export (Metro bundling)..."
+          npx expo export --platform android --output-dir /tmp/expo
+          echo "✅ Expo export successful!"
 
       # 8. Upload Logs if CI Fails
       - name: Upload Debug Logs
@@ -90,6 +87,6 @@ jobs:
         with:
           name: frontend-debug-logs
           path: |
-            Frontend/npm-debug.log
-            Frontend/yarn-error.log
-            /tmp/index.android.bundle
+            Frontend/attendance-app/npm-debug.log
+            Frontend/attendance-app/yarn-error.log
+            /tmp/expo
