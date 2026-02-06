@@ -26,15 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: "**/package-lock.json"
 
-      # 3. Install Dependencies (Clean Install)
+      # 3. Install Dependencies
       - name: Install dependencies
         working-directory: Frontend
         run: |
           echo "📦 Installing dependencies..."
-          npm ci
+          npm install --legacy-peer-deps
 
       # 4. Run ESLint (Compulsory)
       - name: Run Lint Check
