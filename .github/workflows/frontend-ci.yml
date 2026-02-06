@@ -1,0 +1,53 @@
+name: Frontend CI 
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "Frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - "Frontend/**"
+
+jobs:
+  frontend-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout Code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: Frontend/package-lock.json
+
+      # 3. Install Dependencies
+      - name: Install dependencies
+        working-directory: Frontend
+        run: npm install
+
+      # 4. Basic React Native Check
+      - name: Verify React Native project
+        working-directory: Frontend
+        run: |
+          echo "✅ React Native Frontend CI is running!"
+
+          if [ -f package.json ]; then
+            echo "✅ package.json found"
+          else
+            echo "❌ package.json missing"
+            exit 1
+          fi
+
+          echo "📌 Installed Packages:"
+          npm list --depth=0 || true
+
+          echo "🎉 Frontend Connected Successfully!"
