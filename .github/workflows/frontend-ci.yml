@@ -74,9 +74,10 @@ jobs:
         working-directory: Frontend/attendance-app
         env:
           EXPO_NO_TELEMETRY: "1"
+          CI: "1"
         run: |
           echo "📦 Testing Expo export (Metro bundling)..."
-          npx expo export --platform android --output-dir /tmp/expo --non-interactive
+          npx expo export --platform android --output-dir /tmp/expo
           echo "✅ Expo export successful!"
 
       # 8. Upload Logs if CI Fails
