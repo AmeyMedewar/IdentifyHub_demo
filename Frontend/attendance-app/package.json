@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node tests/test.js"
+    "test": "node Frontend/attendance-app/tests/test.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
