@@ -1,4 +1,4 @@
-name: Frontend CI 
+name: Frontend CI (React Native)
 
 on:
   push:
@@ -13,15 +13,15 @@ on:
       - "Frontend/**"
 
 jobs:
-  frontend-check:
+  frontend-ci:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout Code
-      - name: Checkout repository
+      # 1. Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
+      # 2. Setup Node.js Environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -29,25 +29,67 @@ jobs:
           cache: "npm"
           cache-dependency-path: Frontend/package-lock.json
 
-      # 3. Install Dependencies
+      # 3. Install Dependencies (Clean Install)
       - name: Install dependencies
         working-directory: Frontend
-        run: npm install
+        run: |
+          echo "📦 Installing dependencies..."
+          npm ci
 
-      # 4. Basic React Native Check
-      - name: Verify React Native project
+      # 4. Run ESLint (Compulsory)
+      - name: Run Lint Check
         working-directory: Frontend
         run: |
-          echo "✅ React Native Frontend CI is running!"
-
-          if [ -f package.json ]; then
-            echo "✅ package.json found"
+          echo "🔍 Running ESLint..."
+          if npm run | grep -q "lint"; then
+            npm run lint
           else
-            echo "❌ package.json missing"
-            exit 1
+            echo "⚠️ No lint script found in package.json"
           fi
 
-          echo "📌 Installed Packages:"
-          npm list --depth=0 || true
+      # 5. Run TypeScript Type Check (if TS Project)
+      - name: Run Type Check
+        working-directory: Frontend
+        run: |
+          echo "🧠 Running TypeScript check..."
+          if [ -f "tsconfig.json" ]; then
+            npx tsc --noEmit
+          else
+            echo "ℹ️ Not a TypeScript project, skipping..."
+          fi
 
-          echo "🎉 Frontend Connected Successfully!"
+      # 6. Run Unit Tests (Jest)
+      - name: Run Tests
+        working-directory: Frontend
+        run: |
+          echo "🧪 Running tests..."
+          if npm run | grep -q "test"; then
+            npm test -- --passWithNoTests
+          else
+            echo "⚠️ No test script found"
+          fi
+
+      # 7. Metro Bundle Check (Very Important for RN)
+      - name: Verify Metro Bundling Works
+        working-directory: Frontend
+        run: |
+          echo "📦 Testing Metro bundler build..."
+          npx react-native bundle \
+            --entry-file index.js \
+            --platform android \
+            --dev false \
+            --bundle-output /tmp/index.android.bundle \
+            --assets-dest /tmp/assets
+
+          echo "✅ Metro bundling successful!"
+
+      # 8. Upload Logs if CI Fails
+      - name: Upload Debug Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-debug-logs
+          path: |
+            Frontend/npm-debug.log
+            Frontend/yarn-error.log
+            /tmp/index.android.bundle
