@@ -1,7 +1,10 @@
-# Maven Installation in VSCode - Task Tracking
+# TODO: Fix Hibernate + MySQL User Entity Mapping
 
-- [x] Check if Maven is already installed on the system
-- [ ] Install Maven if not present (download and set up PATH)
-- [ ] Install VSCode Maven extension for integration
-- [ ] Test Maven installation by running mvn --version
-- [ ] Test Maven in the project by running mvn clean compile in Backend directory
+## Tasks
+- [x] Update User.java: Change @Column(name = "user_id") to @Column(name = "id") for the id field
+- [x] Verify other field mappings: phoneNumber -> phone_number, dateOfBirth -> date_of_birth, currentStatus -> current_status (no changes needed)
+- [x] Update Attendance.java: Change referencedColumnName from "user_id" to "id" in @JoinColumn
+- [x] Update MeetingParticipant.java: Change referencedColumnName from "user_id" to "id" in @JoinColumn
+- [x] Update Meeting.java: Change referencedColumnName from "user_id" to "id" in @JoinColumn
+- [x] Suggest MySQL table schema update: ALTER TABLE users CHANGE user_id id BIGINT PRIMARY KEY AUTO_INCREMENT; (Not needed - DB already has 'id' column)
+- [x] Test the application to verify the fix (Application now starts successfully on port 8081)

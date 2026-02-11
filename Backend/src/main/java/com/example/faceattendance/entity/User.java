@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -41,6 +42,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttendanceStatus currentStatus = AttendanceStatus.ABSENT;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Attendance> attendances;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
