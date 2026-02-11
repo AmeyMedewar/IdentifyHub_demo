@@ -1,8 +1,11 @@
 package com.example.faceattendance.entity;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.function.BiFunction;
 
 @Entity
 @Table(name = "attendance")
@@ -22,6 +25,9 @@ public class Attendance {
     private LocalDateTime checkInTime;
 
     private LocalDateTime checkOutTime;
+
+    @Column(columnDefinition = "DECIMAL(5,2)")
+    private BigDecimal workHours;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -83,6 +89,14 @@ public class Attendance {
 
     public void setCheckOutTime(LocalDateTime checkOutTime) {
         this.checkOutTime = checkOutTime;
+    }
+
+    public BigDecimal getWorkHours() {
+        return workHours;
+    }
+
+    public void setWorkHours(BigDecimal workHours) {
+        this.workHours = workHours;
     }
 
     public AttendanceStatus getAttendanceStatus() {
