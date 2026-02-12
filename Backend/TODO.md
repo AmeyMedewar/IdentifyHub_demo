@@ -5,3 +5,4 @@
 - [x] Update AttendanceService to separate checkIn and checkOut methods, calculate work hours on check-out
 - [x] Update AttendanceController to add separate /checkin and /checkout endpoints
 - [x] Test the functionality to ensure no conflicts
+- [ ] Write comprehensive test cases for register, edit, check-in, and check-out modules

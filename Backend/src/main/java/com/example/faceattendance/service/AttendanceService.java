@@ -101,6 +101,31 @@ public class AttendanceService {
         }
     }
 
+    @Transactional
+    public String markAttendance(AttendanceRequestDTO attendanceRequestDTO) {
+        // Keep the old method for backward compatibility, but delegate to new methods
+        Optional<User> userOpt = userService.getUserEntityById(attendanceRequestDTO.getUserId());
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        User user = userOpt.get();
+        LocalDate today = LocalDate.now();
+
+        Optional<Attendance> existingAttendance = attendanceRepository.findByUserAndDate(user, today);
+
+        if (existingAttendance.isPresent()) {
+            Attendance attendance = existingAttendance.get();
+            if (attendance.getCheckInTime() != null && attendance.getCheckOutTime() == null) {
+                return checkOut(attendanceRequestDTO);
+            } else {
+                return "Already checked out for today";
+            }
+        } else {
+            return checkIn(attendanceRequestDTO);
+        }
+    }
+
     public Optional<Attendance> getAttendanceByUserAndDate(User user, LocalDate date) {
         return attendanceRepository.findByUserAndDate(user, date);
     }
