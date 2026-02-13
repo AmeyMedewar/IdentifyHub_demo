@@ -246,10 +246,4 @@ ML-Service/face_database.pkl
 .vscode/
 
 **/recordings/
-
-# Ignore Meeting module files
-**/MeetingController.java
-**/MeetingService.java
-**/MeetingRepository.java
-**/Meeting.java
-**/MeetingParticipant.java
+**/application.properties
