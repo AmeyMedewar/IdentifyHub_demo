@@ -24,6 +24,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.faceattendance.dto.UserRequestDTO;
 import com.example.faceattendance.dto.UserResponseDTO;
+import com.example.faceattendance.exception.ConflictException;
+import com.example.faceattendance.exception.GlobalExceptionHandler;
+import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,7 +45,9 @@ class UserControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(userController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
     }
@@ -73,7 +78,7 @@ class UserControllerTest {
     }
 
     @Test
-    void testRegisterUser_Failure() throws Exception {
+    void testRegisterUser_DuplicateEmail() throws Exception {
         UserRequestDTO requestDTO = new UserRequestDTO();
         requestDTO.setName("John Doe");
         requestDTO.setEmail("john.doe@example.com");
@@ -81,12 +86,14 @@ class UserControllerTest {
         requestDTO.setDateOfBirth(LocalDate.of(1990, 1, 1));
         requestDTO.setGender("Male");
 
-        when(userService.registerUser(any(UserRequestDTO.class))).thenThrow(new RuntimeException("Registration failed"));
+        when(userService.registerUser(any(UserRequestDTO.class)))
+                .thenThrow(new ConflictException("User with this email already exists"));
 
         mockMvc.perform(post("/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("User with this email already exists"));
     }
 
     @Test
@@ -157,7 +164,7 @@ class UserControllerTest {
     }
 
     @Test
-    void testUpdateUser_Failure() throws Exception {
+    void testUpdateUser_NotFound() throws Exception {
         UserRequestDTO requestDTO = new UserRequestDTO();
         requestDTO.setName("John Updated");
         requestDTO.setEmail("john.updated@example.com");
@@ -165,11 +172,13 @@ class UserControllerTest {
         requestDTO.setDateOfBirth(LocalDate.of(1990, 1, 1));
         requestDTO.setGender("Male");
 
-        when(userService.updateUser(eq(1L), any(UserRequestDTO.class))).thenThrow(new RuntimeException("Update failed"));
+        when(userService.updateUser(eq(1L), any(UserRequestDTO.class)))
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(put("/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("User not found"));
     }
 }

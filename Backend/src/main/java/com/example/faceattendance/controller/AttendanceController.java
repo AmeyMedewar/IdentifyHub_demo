@@ -16,21 +16,13 @@ public class AttendanceController {
 
     @PostMapping("/checkin")
     public ResponseEntity<String> checkIn(@Valid @RequestBody AttendanceRequestDTO attendanceRequestDTO) {
-        try {
-            String result = attendanceService.checkIn(attendanceRequestDTO);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error during check-in: " + e.getMessage());
-        }
+        String result = attendanceService.checkIn(attendanceRequestDTO);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/checkout")
     public ResponseEntity<String> checkOut(@Valid @RequestBody AttendanceRequestDTO attendanceRequestDTO) {
-        try {
-            String result = attendanceService.checkOut(attendanceRequestDTO);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error during check-out: " + e.getMessage());
-        }
+        String result = attendanceService.checkOut(attendanceRequestDTO);
+        return ResponseEntity.ok(result);
     }
 }

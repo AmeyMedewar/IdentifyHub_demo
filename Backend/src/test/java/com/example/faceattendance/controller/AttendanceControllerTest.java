@@ -1,6 +1,8 @@
 package com.example.faceattendance.controller;
 
 import com.example.faceattendance.dto.AttendanceRequestDTO;
+import com.example.faceattendance.exception.GlobalExceptionHandler;
+import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.service.AttendanceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +34,9 @@ class AttendanceControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(attendanceController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(attendanceController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
         objectMapper = new ObjectMapper();
     }
 
@@ -55,13 +59,14 @@ class AttendanceControllerTest {
         AttendanceRequestDTO requestDTO = new AttendanceRequestDTO();
         requestDTO.setUserId(1L);
 
-        when(attendanceService.checkIn(any(AttendanceRequestDTO.class))).thenThrow(new RuntimeException("User not found"));
+        when(attendanceService.checkIn(any(AttendanceRequestDTO.class)))
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(post("/attendance/checkin")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Error during check-in: User not found"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("User not found"));
     }
 
     @Test
@@ -83,13 +88,14 @@ class AttendanceControllerTest {
         AttendanceRequestDTO requestDTO = new AttendanceRequestDTO();
         requestDTO.setUserId(1L);
 
-        when(attendanceService.checkOut(any(AttendanceRequestDTO.class))).thenThrow(new RuntimeException("No check-in record found"));
+        when(attendanceService.checkOut(any(AttendanceRequestDTO.class)))
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(post("/attendance/checkout")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Error during check-out: No check-in record found"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("User not found"));
     }
 
     @Test

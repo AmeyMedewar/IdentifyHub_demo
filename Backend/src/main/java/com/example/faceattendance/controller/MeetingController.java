@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -48,12 +49,14 @@ public class MeetingController {
         return ResponseEntity.ok(meeting);
     }
 
-    @PutMapping("/{id}/stop")
-    public ResponseEntity<Meeting> stopMeeting(@PathVariable Long id,
-            @RequestParam("recording") MultipartFile recording) throws IOException {
-        Meeting meeting = meetingService.stopMeeting(id, recording);
-        return ResponseEntity.ok(meeting);
-    }
+   @PostMapping("/{id}/stop")
+public ResponseEntity<Meeting> stopMeeting(
+        @PathVariable Long id,
+        @RequestParam("recording") MultipartFile recording)throws IOException {
+    Meeting meeting = meetingService.stopMeeting(id, recording);
+    return ResponseEntity.ok(meeting);
+}
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Meeting> getMeetingById(@PathVariable Long id) {
@@ -66,8 +69,8 @@ public class MeetingController {
         Optional<Meeting> meetingOpt = meetingService.getMeetingById(id);
         if (meetingOpt.isPresent() && meetingOpt.get().getMeetingAudioPath() != null) {
             Path filePath = Paths.get(meetingOpt.get().getMeetingAudioPath());
-            Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists() || resource.isReadable()) {
+            if (Files.exists(filePath) && Files.isReadable(filePath)) {
+                Resource resource = new UrlResource(filePath.toUri());
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
                                 "attachment; filename=\"" + resource.getFilename() + "\"")
@@ -83,8 +86,8 @@ public class MeetingController {
         Optional<Meeting> meetingOpt = meetingService.getMeetingById(id);
         if (meetingOpt.isPresent() && meetingOpt.get().getMeetingVideoPath() != null) {
             Path filePath = Paths.get(meetingOpt.get().getMeetingVideoPath());
-            Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists() || resource.isReadable()) {
+            if (Files.exists(filePath) && Files.isReadable(filePath)) {
+                Resource resource = new UrlResource(filePath.toUri());
                 return ResponseEntity.ok()
                         .header(HttpHeaders.CONTENT_DISPOSITION,
                                 "attachment; filename=\"" + resource.getFilename() + "\"")
@@ -94,4 +97,5 @@ public class MeetingController {
         }
         return ResponseEntity.notFound().build();
     }
+
 }

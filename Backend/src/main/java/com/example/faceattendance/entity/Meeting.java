@@ -1,5 +1,7 @@
 package com.example.faceattendance.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -33,6 +35,7 @@ public class Meeting {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User organizer;
 
     @Column(name = "meeting_audio_path")
@@ -42,6 +45,7 @@ public class Meeting {
     private String meetingVideoPath;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<MeetingParticipant> participants;
 
     @Column(nullable = false, updatable = false)

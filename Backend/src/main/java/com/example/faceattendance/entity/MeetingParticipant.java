@@ -1,10 +1,13 @@
 package com.example.faceattendance.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meeting_participants")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class MeetingParticipant {
 
     @Id
@@ -13,6 +16,7 @@ public class MeetingParticipant {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meeting_id", nullable = false)
+    @JsonBackReference
     private Meeting meeting;
 
     @ManyToOne(fetch = FetchType.LAZY)

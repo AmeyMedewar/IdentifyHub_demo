@@ -3,6 +3,8 @@ package com.example.faceattendance.service;
 import com.example.faceattendance.dto.UserRequestDTO;
 import com.example.faceattendance.dto.UserResponseDTO;
 import com.example.faceattendance.entity.User;
+import com.example.faceattendance.exception.ConflictException;
+import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 @Service
 public class UserService {
 
@@ -21,7 +22,7 @@ public class UserService {
     @Transactional
     public UserResponseDTO registerUser(UserRequestDTO userRequestDTO) {
         if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
-            throw new RuntimeException("User with this email already exists");
+            throw new ConflictException("User with this email already exists");
         }
 
         User user = new User();
@@ -54,14 +55,14 @@ public class UserService {
     public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
 
         User user = optionalUser.get();
 
         // Check if email is being changed and if it's already taken by another user
         if (!user.getEmail().equals(userRequestDTO.getEmail()) && userRepository.existsByEmail(userRequestDTO.getEmail())) {
-            throw new RuntimeException("Email is already taken by another user");
+            throw new ConflictException("Email is already taken by another user");
         }
 
         // Update fields
