@@ -3,6 +3,7 @@ package com.example.faceattendance.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -246,4 +247,34 @@ class AttendanceServiceTest {
         assertTrue(result.isPresent());
         assertEquals(attendance, result.get());
     }
+
+    @Test
+void testAutoCheckOutForgottenUsers() {
+    // Arrange
+    User user = new User();
+    user.setId(1L);
+
+    Attendance attendance = new Attendance();
+    attendance.setUser(user);
+    attendance.setDate(LocalDate.now().minusDays(1));
+    attendance.setCheckInTime(LocalDateTime.now().minusHours(8));
+    attendance.setCheckOutTime(null);
+
+    List<Attendance> pendingList = List.of(attendance);
+
+    when(attendanceRepository
+            .findByCheckInTimeNotNullAndCheckOutTimeIsNullAndDateBefore(any(LocalDate.class)))
+            .thenReturn(pendingList);
+
+    // Act
+    attendanceService.autoCheckOutForgottenUsers();
+
+    // Assert
+    assertNotNull(attendance.getCheckOutTime());
+    assertNotNull(attendance.getWorkHours());
+
+    verify(attendanceRepository).save(attendance);
+    verify(userService).saveUser(user);
+}
+
 }

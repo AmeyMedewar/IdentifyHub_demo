@@ -1,19 +1,22 @@
 package com.example.faceattendance.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.faceattendance.dto.AttendanceRequestDTO;
 import com.example.faceattendance.entity.Attendance;
 import com.example.faceattendance.entity.User;
 import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.repository.AttendanceRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class AttendanceService {
@@ -129,5 +132,34 @@ public class AttendanceService {
 
     public Optional<Attendance> getAttendanceByUserAndDate(User user, LocalDate date) {
         return attendanceRepository.findByUserAndDate(user, date);
+    }
+
+      //  AUTO CHECKOUT IF FORGET TO CHECKOUT
+    @Scheduled(cron = "0 5 0 * * *",  zone = "Asia/Kolkata") // runs daily at 12:05 AM
+    @Transactional
+    public void autoCheckOutForgottenUsers() {
+        LocalDate today = LocalDate.now();
+
+        List<Attendance> pendingAttendances =
+                attendanceRepository.findByCheckInTimeNotNullAndCheckOutTimeIsNullAndDateBefore(today);
+
+        for (Attendance attendance : pendingAttendances) {
+            LocalDateTime autoCheckoutTime = attendance.getDate().atTime(23, 59, 59);
+            attendance.setCheckOutTime(autoCheckoutTime);
+
+            long seconds = java.time.Duration
+                    .between(attendance.getCheckInTime(), autoCheckoutTime)
+                    .getSeconds();
+
+            BigDecimal hours = BigDecimal.valueOf(seconds)
+                    .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
+
+            attendance.setWorkHours(hours);
+            attendanceRepository.save(attendance);
+
+            User user = attendance.getUser();
+            user.setCurrentStatus(User.AttendanceStatus.ABSENT);
+            userService.saveUser(user);
+        }
     }
 }

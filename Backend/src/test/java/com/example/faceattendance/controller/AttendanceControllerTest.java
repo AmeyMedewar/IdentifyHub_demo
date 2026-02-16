@@ -1,23 +1,25 @@
 package com.example.faceattendance.controller;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import com.example.faceattendance.dto.AttendanceRequestDTO;
 import com.example.faceattendance.exception.GlobalExceptionHandler;
 import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.service.AttendanceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class AttendanceControllerTest {
 
@@ -98,6 +100,21 @@ class AttendanceControllerTest {
                 .andExpect(jsonPath("$.error").value("User not found"));
     }
 
+    ////MAKING CHANGES TO TEST CHECK IN SCENARIOS
+    @Test
+    void testCheckIn_AlreadyCheckedIn() throws Exception {
+        AttendanceRequestDTO requestDTO = new AttendanceRequestDTO();
+        requestDTO.setUserId(1L);
+
+        when(attendanceService.checkIn(any(AttendanceRequestDTO.class))).thenReturn("Already checked in for today");
+
+        mockMvc.perform(post("/attendance/checkin")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Already checked in for today"));
+    }
+///////////////////////////////////////
     @Test
     void testCheckOut_AlreadyCheckedOut() throws Exception {
         AttendanceRequestDTO requestDTO = new AttendanceRequestDTO();
@@ -125,4 +142,6 @@ class AttendanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("No check-in record found for today"));
     }
+
+    
 }
