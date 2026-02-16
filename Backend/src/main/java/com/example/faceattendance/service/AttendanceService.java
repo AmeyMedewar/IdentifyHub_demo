@@ -1,4 +1,4 @@
-package com.example.faceattendance.service;
+ package com.example.faceattendance.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.faceattendance.dto.AttendanceRequestDTO;
 import com.example.faceattendance.entity.Attendance;
 import com.example.faceattendance.entity.User;
-import com.example.faceattendance.exception.ResourceNotFoundException;
 import com.example.faceattendance.repository.AttendanceRepository;
 
 @Service
@@ -31,7 +30,7 @@ public class AttendanceService {
     public String checkIn(AttendanceRequestDTO attendanceRequestDTO) {
         Optional<User> userOpt = userService.getUserEntityById(attendanceRequestDTO.getUserId());
         if (userOpt.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
@@ -73,7 +72,7 @@ public class AttendanceService {
     public String checkOut(AttendanceRequestDTO attendanceRequestDTO) {
         Optional<User> userOpt = userService.getUserEntityById(attendanceRequestDTO.getUserId());
         if (userOpt.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
@@ -110,7 +109,7 @@ public class AttendanceService {
         // Keep the old method for backward compatibility, but delegate to new methods
         Optional<User> userOpt = userService.getUserEntityById(attendanceRequestDTO.getUserId());
         if (userOpt.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
@@ -150,7 +149,7 @@ public class AttendanceService {
             long seconds = java.time.Duration
                     .between(attendance.getCheckInTime(), autoCheckoutTime)
                     .getSeconds();
-
+                    
             BigDecimal hours = BigDecimal.valueOf(seconds)
                     .divide(BigDecimal.valueOf(3600), 2, RoundingMode.HALF_UP);
 
